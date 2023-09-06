@@ -2,15 +2,31 @@ package FindShortestPathDjikstra;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 class GraphPanel extends JPanel {
     static private int[][] adjacencyMatrix;
+    static HashMap<Character, HashMap<Character, Integer>> graph = new HashMap<>();
 
     public static void setAdjacencyMatrix(int[][] matrix) {
         adjacencyMatrix = matrix;
+        for (int i = 0; i < matrix.length; i++) {
+            char vertexLabel = indexToLabel(i).charAt(0);
+            graph.put(vertexLabel, new HashMap<>());
+
+            for (int j = 0; j < matrix[i].length; j++) {
+                if (matrix[i][j] != 0) { // Assuming a non-zero value means a connection
+                    char connectedVertexLabel = indexToLabel(j).charAt(0);
+                    int weight = matrix[i][j];
+                    graph.get(vertexLabel).put(connectedVertexLabel, weight);
+                }
+            }
+        }
+        System.out.println(graph);
     }
 
-    private String indexToLabel(int index) {
+    private static String indexToLabel(int index) {
         return String.valueOf((char) ('a' + index));
     }
 
