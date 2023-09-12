@@ -22,6 +22,8 @@ public class Main extends JFrame{
     private Point secondPoint = null;
     private boolean isFirstPointSelected = false;
     private List<Point> circleCenters = new ArrayList<>();
+    private JComboBox<String> circleDropdown;
+    private List<vertex> vertices = new ArrayList<>();
 
     public Main() {
         setTitle("Graph-like GUI");
@@ -41,39 +43,47 @@ public class Main extends JFrame{
             }
         });
 	}
-    private void setupUI() {
-        // Left Panel
-        leftPanel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                // Add custom drawing code here if you want
-            }
-        };
-        leftPanel.setBackground(Color.WHITE);
-        mainPanel.add(leftPanel, BorderLayout.CENTER);
+	private void setupUI() {
+	    // Left Panel
+	    leftPanel = new JPanel() {
+	        @Override
+	        protected void paintComponent(Graphics g) {
+	            super.paintComponent(g);
+	            for (vertex vertex : vertices) {
+	                g.setColor(Color.BLACK);
+	                g.fillOval(vertex.center.x - vertex.radius, vertex.center.y - vertex.radius, 2 * vertex.radius, 2 * vertex.radius);
+	                g.setColor(Color.WHITE);
+	                g.drawString(vertex.label, vertex.center.x - 4, vertex.center.y + 4);
+	            }
+	        }
+	    };
 
-        // Right Panel
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
-        mainPanel.add(rightPanel, BorderLayout.EAST);
+	    leftPanel.setBackground(Color.WHITE);
+	    mainPanel.add(leftPanel, BorderLayout.CENTER);
 
-        addButton = new JButton("Add");
-        connectButton = new JButton("Connect");
-        startButton = new JButton("Start");
-        textField = new JTextField(10);
-        
-        // Panel for Start button and text field
-        JPanel startAndTextFieldPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5)); // 5 pixel gaps
-        startAndTextFieldPanel.add(startButton);
-        startAndTextFieldPanel.add(textField);
+	    // Right Panel
+	    JPanel rightPanel = new JPanel();
+	    rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
+	    mainPanel.add(rightPanel, BorderLayout.EAST);
 
-        rightPanel.add(addButton);
-        rightPanel.add(connectButton);
-        rightPanel.add(startAndTextFieldPanel);
+	    addButton = new JButton("Add");
+	    connectButton = new JButton("Connect");
+	    startButton = new JButton("Start");
+	    
+	    // Panel for Start button and dropdown
+	    JPanel startAndDropdownPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 5)); // 5 pixel gaps
+	    startAndDropdownPanel.add(startButton);
 
-        setupListeners();
-    }
+	    circleDropdown = new JComboBox<>();
+	    startAndDropdownPanel.add(circleDropdown);
+
+	    rightPanel.add(addButton);
+	    rightPanel.add(connectButton);
+	    rightPanel.add(startAndDropdownPanel);
+
+	    setupListeners();
+	}
+
     
     private void setupListeners() {
     	addButton.addActionListener(new ActionListener() {
@@ -100,20 +110,17 @@ public class Main extends JFrame{
         leftPanel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (isAddToggled) {
-                	circleCenters.add(e.getPoint());
-                    Graphics g = leftPanel.getGraphics();
-                    g.setColor(Color.BLACK);
-                    int radius = 15;  // Adjusted the size here
-                    g.fillOval(e.getX() - radius, e.getY() - radius, 2 * radius, 2 * radius);
+            	if (isAddToggled) {
+            	    circleCenters.add(e.getPoint());
+            	    String label = String.valueOf((char) ('a' + circleCounter));
+            	    vertices.add(new vertex(e.getPoint(), 15, label));  // 15 is the radius
+            	    circleCounter++;
 
-                    // Add label to the circle
-                    String label = String.valueOf((char) ('a' + circleCounter));  // Convert counter to 'a', 'b', 'c', etc.
-                    g.setColor(Color.WHITE); // This will make the label color white, you can change as needed
-                    g.drawString(label, e.getX() - 4, e.getY() + 4); // Adjust these numbers to position the label properly within the circle
-                    circleCounter++; // Increase the counter
-                    //leftPanel.repaint();
-                }else if (isConnectToggled) {
+            	    String nextLabel = String.valueOf((char) ('A' + circleCenters.size() - 1));
+            	    circleDropdown.addItem(nextLabel);
+            	    leftPanel.repaint();
+            	}
+            	else if (isConnectToggled) {
                     Graphics g = leftPanel.getGraphics();
                     Point circleCenter = getCircleCenterFromPoint(e.getPoint());
                     if (circleCenter != null) {  // This checks if the point is inside a circle
