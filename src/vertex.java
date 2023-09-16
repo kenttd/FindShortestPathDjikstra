@@ -38,7 +38,7 @@ public class vertex {
 	    int dy = this.position.y - other.position.y;
 	    return (int) Math.sqrt(dx*dx + dy*dy);
 	}
-	
+
 	@Override
 	public String toString() {
 		return "graph [name=" + name + ", prev=" + prev + ", shortest=" + shortest + "]";

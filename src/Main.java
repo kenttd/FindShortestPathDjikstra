@@ -4,8 +4,10 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.QuadCurve2D;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,12 +42,15 @@ public class Main{
 	static int currentMode;
 	static ArrayList<Character> unvisited = new ArrayList<>();
 	static ArrayList<Character> visited = new ArrayList<>();
+	private static List<Color> distinctColors;
+
 	public static void main(String[] args) {
 		setup();
 		eventSetup();
 	}
 	
 	public static void setup() {
+		generateColor();
 		currentMode = editMode;
 		frame = new JFrame();
 		frame.setSize(1200,800);
@@ -95,9 +100,59 @@ public class Main{
 			            g.setColor(Color.BLACK);
 			            g.drawLine(selectedVertex.position.x, selectedVertex.position.y, mousePosition.x, mousePosition.y);
 			        }
-		        }else if(currentMode==resultMode) {
-		        	
+		        }else if(currentMode == resultMode) {
+		            Graphics2D g2d = (Graphics2D) g;
+		            g2d.setStroke(new BasicStroke(3));
+
+		            // Drawing the shortest paths with unique colors and transparency
+		            for(vertex v : vertices) {
+		                if(v.prev != '\u0000') { 
+		                    vertex predecessor = vertices.get(findVertexIndex(v.prev));
+		                    
+		                    Color originalPathColor = generatePathColor('A', v.name);
+		                    Color transparentPathColor = new Color(originalPathColor.getRed(), originalPathColor.getGreen(), originalPathColor.getBlue(), 200);
+		                    g2d.setColor(transparentPathColor);
+		                    
+		                    Point controlPoint = new Point((predecessor.position.x + v.position.x) / 2,
+		                                                   (predecessor.position.y + v.position.y) / 2);
+
+		                    // Offset the control point based on the position of end vertex relative to start vertex
+		                    int offset = 30;
+		                    if (v.position.x > predecessor.position.x) {
+		                        controlPoint.x += (v.position.y - predecessor.position.y) / offset;
+		                        controlPoint.y -= (v.position.x - predecessor.position.x) / offset;
+		                    } else {
+		                        controlPoint.x -= (v.position.y - predecessor.position.y) / offset;
+		                        controlPoint.y += (v.position.x - predecessor.position.x) / offset;
+		                    }
+		                    
+		                    // Draw the curved line using a quadratic curve
+		                    g2d.draw(new QuadCurve2D.Double(predecessor.position.x, predecessor.position.y, 
+		                                                    controlPoint.x, controlPoint.y, 
+		                                                    v.position.x, v.position.y));
+
+		                    // Drawing the arrow in the middle of the curve
+		                    drawArrow(g2d, predecessor.position, controlPoint, v.position);
+
+		                    // Calculate the midpoint for displaying the shortest distance value
+		                    int midX = (v.position.x + predecessor.position.x) / 2;
+		                    int midY = (v.position.y + predecessor.position.y) / 2;
+
+		                    // Display the shortest distance slightly above the midpoint
+		                    g.setColor(Color.RED);
+		                    g.drawString(String.valueOf(v.shortest), midX, midY - 10);
+		                }
+		            }
+
+		            // Drawing all the vertices
+		            for(vertex v : vertices) {
+		                v.draw(g);
+		            }
 		        }
+
+
+
+
 		    }
 		};
 		display.setBounds(30,30,1000,700);
@@ -195,6 +250,7 @@ public class Main{
     	    public void actionPerformed(ActionEvent e) {
     	    	currentMode = resultMode;
     	    	djikstra(((String) choice.getSelectedItem()).charAt(0));
+    	    	frame.repaint();
     	    }
     	});
 	}
@@ -230,5 +286,64 @@ public class Main{
 		}
 		return -1;
 	}
+	
+	private static Color generatePathColor(char start, char end) {
+	    int combinedValue = start + end;
+	    return distinctColors.get(combinedValue % distinctColors.size());
+	}
+
+	
+	private static void generateColor() {
+		distinctColors = Arrays.asList(
+			    new Color(255, 0, 0),     // Bright Red
+			    new Color(0, 255, 0),     // Bright Green
+			    new Color(0, 0, 255),     // Bright Blue
+			    new Color(255, 255, 0),   // Yellow
+			    new Color(0, 255, 255),   // Cyan
+			    new Color(255, 0, 255),   // Magenta
+			    new Color(192, 192, 192), // Silver
+			    new Color(128, 0, 0),     // Maroon
+			    new Color(128, 128, 0),   // Olive
+			    new Color(0, 128, 0),     // Green
+			    new Color(128, 0, 128),   // Purple
+			    new Color(0, 128, 128),   // Teal
+			    new Color(0, 0, 128),     // Navy
+			    new Color(165, 42, 42),   // Brown
+			    new Color(255, 165, 0),   // Orange
+			    new Color(255, 192, 203), // Pink
+			    new Color(64, 224, 208),  // Turquoise
+			    new Color(220, 20, 60),   // Crimson
+			    new Color(255, 140, 0),   // Dark Orange
+			    new Color(75, 0, 130),    // Indigo
+			    new Color(127, 255, 0),   // Chartreuse
+			    new Color(100, 149, 237), // Cornflower Blue
+			    new Color(189, 183, 107), // Dark Khaki
+			    new Color(32, 178, 170),  // Light Sea Green
+			    new Color(240, 230, 140)  // Khaki
+			);
+
+	}
+
+	private static void drawArrow(Graphics2D g2d, Point start, Point control, Point end) {
+	    int arrowSize = 10;
+	    double t = 0.5; // Midpoint on the curve
+	    double x = (1 - t) * (1 - t) * start.x + 2 * (1 - t) * t * control.x + t * t * end.x;
+	    double y = (1 - t) * (1 - t) * start.y + 2 * (1 - t) * t * control.y + t * t * end.y;
+	    double dx = 2 * (1 - t) * (control.x - start.x) + 2 * t * (end.x - control.x);
+	    double dy = 2 * (1 - t) * (control.y - start.y) + 2 * t * (end.y - control.y);
+	    double angle = Math.atan2(dy, dx);
+	    
+	    Point midPoint = new Point((int) x, (int) y);
+	    
+	    // Arrow head
+	    g2d.drawLine(midPoint.x, midPoint.y,
+	                 midPoint.x - (int)(arrowSize * Math.cos(angle + Math.PI/6)),
+	                 midPoint.y - (int)(arrowSize * Math.sin(angle + Math.PI/6)));
+	    g2d.drawLine(midPoint.x, midPoint.y,
+	                 midPoint.x - (int)(arrowSize * Math.cos(angle - Math.PI/6)),
+	                 midPoint.y - (int)(arrowSize * Math.sin(angle - Math.PI/6)));
+	}
+
+
 }
 
