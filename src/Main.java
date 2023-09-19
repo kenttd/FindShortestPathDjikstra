@@ -9,19 +9,8 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.plaf.nimbus.NimbusLookAndFeel;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.plaf.nimbus.NimbusLookAndFeel;
-import javax.swing.SwingUtilities;
 
 public class Main{
 	static JFrame frame;
@@ -116,15 +105,10 @@ public class Main{
 		                    Point controlPoint = new Point((predecessor.position.x + v.position.x) / 2,
 		                                                   (predecessor.position.y + v.position.y) / 2);
 
-		                    // Offset the control point based on the position of end vertex relative to start vertex
+		                    // Offset the control point to "bend" the line
 		                    int offset = 30;
-		                    if (v.position.x > predecessor.position.x) {
-		                        controlPoint.x += (v.position.y - predecessor.position.y) / offset;
-		                        controlPoint.y -= (v.position.x - predecessor.position.x) / offset;
-		                    } else {
-		                        controlPoint.x -= (v.position.y - predecessor.position.y) / offset;
-		                        controlPoint.y += (v.position.x - predecessor.position.x) / offset;
-		                    }
+		                    controlPoint.x += (v.position.y - predecessor.position.y) / offset;
+		                    controlPoint.y -= (v.position.x - predecessor.position.x) / offset;
 		                    
 		                    // Draw the curved line using a quadratic curve
 		                    g2d.draw(new QuadCurve2D.Double(predecessor.position.x, predecessor.position.y, 
@@ -149,7 +133,6 @@ public class Main{
 		                v.draw(g);
 		            }
 		        }
-
 
 
 
@@ -187,8 +170,6 @@ public class Main{
 		                	vertices.get(index1).connection.put(v, computedDistance);
 		                	vertices.get(index2).connection.put(selectedVertex, computedDistance);
 		                	System.out.println("Connecting " + selectedVertex.name + " to " + v.name + " with distance: " + vertices.get(index1).distanceTo(v));
-		                    // Code to draw a line between selectedVertex and v
-		                    // Note: You might want to store these connections in a data structure for future use or display
 		                	for (vertex vert : vertices) {
 		                        for (Map.Entry<vertex, Integer> entry : vert.connection.entrySet()) {
 		                            System.out.println("Distance between " + vert.name + " and " + entry.getKey().name + " is: " + entry.getValue());
